@@ -84,7 +84,7 @@ async def ml_predict_intus(*, user_input: intussusception_input_data):
     
     data = convertinput2data(data_input)
     x = trasform_data_dict2df(data)
-    result = np.round(app.model_dt_kmsmote.predict_proba(x), decimals=3)[-1]
+    result = np.round(app.model_dt_kmsmote.predict_proba(x), decimals=4)[-1]
     return {'Failed': result[0], 'Success': result[1]}
 
 if __name__ == "__main__":
