@@ -66,8 +66,15 @@ def main():
         print(response_data)
         print("*"*100)
         st.header("Results")
-        st.write("**Success:**",response_data['Success']*100,"% ")
-        st.write("**Failed:**",response_data['Failed']*100,"% ")
+        st.subheader("Decision Tree with K-means SMOTE")
+        st.write("**Success:**",round(response_data['dt_kmsmote']['Success']*100,4),"% ")
+        st.write("**Failed:**",round(response_data['dt_kmsmote']['Failed']*100,4),"% ")
+        st.subheader("XGBoost with Adasyn")
+        st.write("**Success:**",round(response_data['xgb_adasyn']['Success']*100,4),"% ")
+        st.write("**Failed:**",round(response_data['xgb_adasyn']['Failed']*100,4),"% ")
+        st.subheader("XGBoost with K-means SMOTE")
+        st.write("**Success:**",round(response_data['xgb_kmsmote']['Success']*100,4),"% ")
+        st.write("**Failed:**",round(response_data['xgb_kmsmote']['Failed']*100,4),"% ")
         
 if __name__ == "__main__":
     main()

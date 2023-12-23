@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel
+import json
 
 import joblib
 # # Load the model
@@ -73,6 +74,8 @@ async def root():
 def load_model():
     # assigned the loaded model to app.model
     app.model_dt_kmsmote = joblib.load('./models/dt_kmsmote.joblib')
+    app.model_xgb_adasyn = joblib.load('./models/xgb_adasyn.joblib')
+    app.model_xgb_kmsmote = joblib.load('./models/xgb_kmsmote.joblib')
     
 @app.post("/ml-predict")
 async def ml_predict_intus(*, user_input: intussusception_input_data):
@@ -84,8 +87,26 @@ async def ml_predict_intus(*, user_input: intussusception_input_data):
     
     data = convertinput2data(data_input)
     x = trasform_data_dict2df(data)
-    result = np.round(app.model_dt_kmsmote.predict_proba(x), decimals=4)[-1]
-    return {'Failed': result[0], 'Success': result[1]}
+    result_dt_kmsmote = np.round(app.model_dt_kmsmote.predict_proba(x), decimals=6)[-1]
+    result_xgb_adasyn = np.round(app.model_xgb_adasyn.predict_proba(x), decimals=6)[-1]
+    result_xgb_kmsmote = np.round(app.model_xgb_kmsmote.predict_proba(x), decimals=6)[-1]
+    print('result_dt_kmsmote', result_dt_kmsmote)
+    print('result_xgb_adasyn', result_xgb_adasyn)
+    print('result_xgb_kmsmote', result_xgb_kmsmote)
+    # results = {}
+    results = {
+        "dt_kmsmote": {
+            'Failed': float(result_dt_kmsmote[0]), 'Success': float(result_dt_kmsmote[1])
+        },
+        "xgb_adasyn": {
+            'Failed': float(result_xgb_adasyn[0]), 'Success': float(result_xgb_adasyn[1])
+        },
+        "xgb_kmsmote": {
+            'Failed': float(result_xgb_kmsmote[0]), 'Success': float(result_xgb_kmsmote[1])
+        }
+    }
+    print('results', results)
+    return results
 
 if __name__ == "__main__":
     # for local testing
