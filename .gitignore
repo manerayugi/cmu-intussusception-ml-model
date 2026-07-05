@@ -7,3 +7,4 @@ __pycache__
 output.json
 output.txt
 data_input.json
+logs/

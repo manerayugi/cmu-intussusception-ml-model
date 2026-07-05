@@ -1,12 +1,15 @@
-# ML Intussusception Reduction Predictor
+# 🏥 Machine Learning Model Aid Prediction for Failed Nonoperative Reduction of Intussusception
 
 เว็บแอปสำหรับแพทย์ ใช้ทำนายโอกาสสำเร็จ/ล้มเหลวของการลดกลืนของลำไส้แบบไม่ผ่าตัด
-(non-operative reduction of intussusception) จากข้อมูลผู้ป่วย โดยใช้โมเดล Machine
-Learning ที่ฝึกไว้แล้ว
+(non-operative reduction of intussusception) จากข้อมูลผู้ป่วย โดยใช้โมเดล Machine Learning
+ที่ฝึกไว้แล้ว
 
-แอปนี้เป็น Streamlit แอปเดี่ยว โหลดโมเดลจากไฟล์ `.joblib` ตรงๆ ไม่ต้องพึ่งบริการ API แยก
+- 🎯 **กรอกข้อมูลผู้ป่วย → ได้ % โอกาสสำเร็จ/ล้มเหลวทันที**
+- 🧩 **Streamlit แอปเดี่ยว** โหลดโมเดลจากไฟล์ `.joblib` ตรงๆ ไม่ต้องพึ่ง API แยก ไม่มีจุดเสีย (network hop) เพิ่ม
+- 📝 **มี log ทุกครั้งที่ทำนาย** (input, output, เวลาที่ใช้) ทั้งในเทอร์มินัลและไฟล์ `logs/predictions.log`
+- ⚠️ **ไม่ใช่เครื่องมือวินิจฉัย** — เป็นแค่ตัวช่วยสนับสนุนการตัดสินใจ ไม่ทดแทนดุลยพินิจแพทย์
 
-## วิธีติดตั้งและรัน (Setup & run)
+## 🚀 วิธีติดตั้งและรัน (Setup & run)
 
 ```bash
 python3 -m venv .venv
@@ -17,28 +20,45 @@ streamlit run app.py
 
 จากนั้นเปิดเบราว์เซอร์ไปที่ URL ที่ Streamlit แสดง (ค่าเริ่มต้น http://localhost:8501)
 
-## โมเดลที่ใช้ (Model)
+## 🧠 โมเดลที่ใช้ (Model)
 
 - **XGBoost classifier**, oversampled ด้วย K-means SMOTE ระหว่างเทรน
 - ไฟล์โมเดล: `models/xgb_kmeans_smote.joblib`
 - ผลการทดสอบภายใน (internal test set, n=51, สถาบันเดียว):
-  Accuracy 94.1%, Sensitivity 91.7%, Specificity 100%, Precision 100%, F1-score 95.7%
+  - Accuracy **94.1%**
+  - Sensitivity **91.7%**
+  - Specificity **100%**
+  - Precision **100%**
+  - F1-score **95.7%**
 
-**ข้อจำกัดที่ควรทราบ**: ตัวเลขข้างต้นมาจากชุดข้อมูลทดสอบขนาดเล็กของสถาบันเดียว และในขั้นตอนฝึกโมเดล
-มีการทำ oversampling (K-means SMOTE) ก่อนแบ่ง train/test ซึ่งอาจทำให้ผลลัพธ์ดูดีกว่าความเป็นจริงเล็กน้อย
-(data leakage between train/test) ตัวเลขนี้จึงควรใช้เป็นข้อมูลอ้างอิงคร่าวๆ ไม่ใช่ตัวชี้วัดที่แม่นยำสมบูรณ์
-โมเดลนี้เป็นเครื่องมือช่วยสนับสนุนการตัดสินใจ (decision support) ไม่ใช่เครื่องมือวินิจฉัยหรือทดแทนดุลยพินิจแพทย์
+> ⚠️ **ข้อจำกัดที่ควรทราบ**: ตัวเลขข้างต้นมาจากชุดข้อมูลทดสอบขนาดเล็กของสถาบันเดียว และในขั้นตอนฝึกโมเดล
+> มีการทำ oversampling (K-means SMOTE) ก่อนแบ่ง train/test ซึ่งอาจทำให้ผลลัพธ์ดูดีกว่าความเป็นจริงเล็กน้อย
+> (data leakage ระหว่าง train/test) ตัวเลขนี้จึงควรใช้เป็นข้อมูลอ้างอิงคร่าวๆ ไม่ใช่ตัวชี้วัดที่แม่นยำสมบูรณ์
+> โมเดลนี้เป็นเครื่องมือช่วยสนับสนุนการตัดสินใจ (decision support) เท่านั้น
 
 โมเดลถูกฝึกและทดลองในโปรเจกต์แยกต่างหาก (`ml-intussusception-model`) — repo นี้ใช้เฉพาะไฟล์โมเดล
 ที่ฝึกเสร็จแล้วมาให้บริการเท่านั้น ไม่มีโค้ดฝึกโมเดลอยู่ในนี้
 
-## โครงสร้างไฟล์
+## 📂 โครงสร้างไฟล์
 
-- `app.py` — Streamlit app หลัก (UI + การเรียกใช้โมเดล)
+- `app.py` — Streamlit app หลัก (form กรอกข้อมูล + เรียกใช้โมเดล + แสดงผล)
 - `models/xgb_kmeans_smote.joblib` — โมเดลที่ใช้งานจริง
-- `requirements.txt` — ไลบรารีที่ต้องติดตั้ง (เวอร์ชันถูก pin ให้ตรงกับไฟล์โมเดลเพื่อความเสถียร)
+- `requirements.txt` — ไลบรารี Python (เวอร์ชัน pin ตายตัว ให้ตรงกับที่ทดสอบกับไฟล์โมเดล)
+- `packages.txt` — system package (`libgomp1`) ที่ XGBoost ต้องใช้บน Linux/Streamlit Cloud
+- `runtime.txt` — pin เวอร์ชัน Python สำหรับ Streamlit Community Cloud
+- `logs/` — log การทำนายแต่ละครั้ง (ไม่ commit เข้า git, สร้างอัตโนมัติตอนรัน)
 
-## Deploy
+## ☁️ Deploy บน Streamlit Community Cloud
 
-ใช้ deploy บน Streamlit Community Cloud, หรือเซิร์ฟเวอร์ภายในโรงพยาบาลที่รัน Python ได้ก็ได้
-ไม่ต้องเปิดพอร์ตหรือรันบริการเพิ่มเติมใดๆ นอกจาก `streamlit run app.py`
+1. Push repo นี้ขึ้น GitHub (ต้องมี `app.py`, `requirements.txt`, `packages.txt`, `runtime.txt`, `models/xgb_kmeans_smote.joblib`)
+2. ไปที่ [share.streamlit.io](https://share.streamlit.io) → New app → เลือก repo/branch/`app.py`
+3. Deploy ได้เลย ไม่ต้องตั้งค่า secrets หรือเปิดพอร์ตเพิ่ม
+
+**🐛 ถ้า deploy แล้ว error**:
+- `libgomp.so.1: cannot open shared object file` → เช็คว่า `packages.txt` (มี `libgomp1`) อยู่ที่ root ของ repo จริง แล้ว reboot app
+- ติดตั้ง dependency ไม่ผ่าน / เวอร์ชันชนกัน → Streamlit Cloud บางครั้งเมิน `runtime.txt` แล้วใช้ Python เวอร์ชันใหม่เกินไปจนไม่มี wheel ให้ไลบรารีที่ pin ไว้ — ลอง delete app แล้ว deploy ใหม่ พร้อมเลือก Python **3.11** เองใน "Advanced settings" ตอน deploy
+
+## 🔒 หมายเหตุเรื่องข้อมูล
+
+`logs/predictions.log` เก็บข้อมูลทางคลินิกของผู้ป่วยที่กรอกเข้ามา (ไม่มีชื่อ/HN แต่ยังเป็นข้อมูลสุขภาพ)
+ถ้า deploy แบบ public ควรจำกัดสิทธิ์การเข้าถึง log นี้ หรือปิดการเก็บ log ถ้าไม่จำเป็น

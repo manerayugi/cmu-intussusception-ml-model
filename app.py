@@ -1,10 +1,22 @@
-"""Streamlit app: predicts the probability that non-operative reduction of
-intussusception will succeed, using a pre-trained XGBoost model.
+"""Streamlit app for "Machine Learning Model Aid Prediction for Failed
+Nonoperative Reduction of Intussusception" - predicts the probability that
+non-operative reduction of intussusception will succeed or fail, using a
+pre-trained XGBoost model.
 
-Run with: streamlit run app.py
+Run locally with: streamlit run app.py
+
+Deploying to Streamlit Community Cloud needs two extra repo-root files
+besides this one and requirements.txt:
+  - packages.txt  -> installs libgomp1, the system library XGBoost needs
+                     to run on Linux (otherwise it builds fine and then
+                     crashes at runtime with a "libgomp.so.1" error).
+  - runtime.txt   -> pins the Python version, so it matches the version
+                     the pinned dependencies below were tested against.
 """
 from __future__ import annotations
 
+import logging
+import time
 from pathlib import Path
 
 import joblib
@@ -12,8 +24,27 @@ import pandas as pd
 import streamlit as st
 
 MODEL_PATH = Path(__file__).parent / "models" / "xgb_kmeans_smote.joblib"
+LOG_DIR = Path(__file__).parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
 
-# Feature vector expected by the model, in training order.
+# Every prediction is logged (input, output, timing) to both the terminal and
+# logs/predictions.log, so a run can be audited or debugged after the fact.
+# Note: this file is not committed to git (see .gitignore) and on Streamlit
+# Community Cloud it lives on ephemeral storage, so it resets on redeploy.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_DIR / "predictions.log", encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
+)
+logger = logging.getLogger("intussusception_app")
+
+# Exact one-hot feature names the model was trained on. Column order doesn't
+# matter to XGBoost (it matches by name against model.feature_names_in_), but
+# the strings must match exactly, or predict_proba raises a feature-mismatch
+# error rather than silently giving a wrong answer.
 FEATURE_TEMPLATE = [
     "Type of intussusception_appendicocolic", "Type of intussusception_colocolic",
     "Type of intussusception_ileocolic", "Type of intussusception_ileoileal",
@@ -79,10 +110,23 @@ VALIDATION_NOTE = (
 
 @st.cache_resource
 def load_model():
+    """Load the model once per running app process (not once per user), and
+    keep it in memory. st.cache_resource is Streamlit's way of sharing a
+    single object across all sessions instead of re-reading the file on
+    every form submit."""
     return joblib.load(MODEL_PATH)
 
 
 def build_feature_vector(inputs: dict) -> pd.DataFrame:
+    """Turn the raw form answers into the one-hot row the model expects.
+
+    Every categorical field is rendered from CATEGORICAL_FIELDS, so its value
+    should always produce a valid "field_value" column - but if a dropdown
+    option is ever added here without a matching column in FEATURE_TEMPLATE,
+    this raises immediately instead of quietly sending the model a made-up
+    feature name (this is what used to happen with the old UI, which offered
+    a "jejunojejunal" intussusception type the model was never trained on).
+    """
     row = {feature: 0 for feature in FEATURE_TEMPLATE}
     for field in CATEGORICAL_FIELDS:
         column = f"{field}_{inputs[field]}"
@@ -95,6 +139,11 @@ def build_feature_vector(inputs: dict) -> pd.DataFrame:
 
 
 def render_form() -> dict | None:
+    """Render the patient input form, grouped into the same clinical
+    sections a doctor would think through: basics, exam findings, imaging,
+    then the planned procedure. Returns the collected answers only on the
+    submit click (None otherwise), since it's wrapped in st.form - the widgets
+    don't trigger a rerun/prediction on every keystroke."""
     inputs = {}
     with st.form("patient_form"):
         st.subheader("ข้อมูลพื้นฐาน (Basic information)")
@@ -151,22 +200,35 @@ def render_form() -> dict | None:
         st.subheader("วิธีการรักษาที่วางแผน (Planned reduction method)")
         inputs["Method of reduction"] = st.selectbox("Method of reduction", CATEGORICAL_FIELDS["Method of reduction"])
 
-        submitted = st.form_submit_button("ทำนายผล / Predict", use_container_width=True)
+        # width="stretch" replaces the deprecated use_container_width=True
+        submitted = st.form_submit_button("ทำนายผล / Predict", width="stretch")
 
     return inputs if submitted else None
 
 
 def render_result(inputs: dict) -> None:
+    """Run the model on one form submission and display the result.
+    Any failure (bad input, missing model file, ...) is caught so the app
+    shows a readable error instead of the default Streamlit crash screen."""
+    start = time.perf_counter()
     try:
         model = load_model()
         x = build_feature_vector(inputs)
         failed_proba, success_proba = model.predict_proba(x)[0]
     except FileNotFoundError:
+        logger.error("model file not found at %s", MODEL_PATH)
         st.error("ไม่พบไฟล์โมเดล (models/xgb_kmeans_smote.joblib) กรุณาตรวจสอบการติดตั้ง")
         return
     except Exception as exc:
+        logger.exception("prediction failed | input=%s", inputs)
         st.error(f"เกิดข้อผิดพลาดระหว่างการคำนวณผล: {exc}")
         return
+    elapsed_ms = (time.perf_counter() - start) * 1000
+
+    logger.info(
+        "input=%s output={'Failed': %.6f, 'Success': %.6f} elapsed_ms=%.1f",
+        inputs, failed_proba, success_proba, elapsed_ms,
+    )
 
     st.divider()
     st.subheader("ผลการทำนาย (Prediction result)")
@@ -180,11 +242,14 @@ def render_result(inputs: dict) -> None:
         "This tool is a clinical decision-support aid only, not a diagnosis or medical "
         "recommendation, and does not replace clinical judgment."
     )
+    st.caption(f"เวลาในการประมวลผล (processing time): {elapsed_ms:.0f} ms")
 
 
 def main():
+    """Page entry point: title, the input form, and (once submitted) the
+    result section plus the collapsible model-info footer."""
     st.set_page_config(page_title="Intussusception Reduction Predictor", page_icon="🏥", layout="centered")
-    st.title("🏥 Machine Learning Aid for Predicting Non-operative Reduction of Intussusception")
+    st.title("🏥 Machine Learning Model Aid Prediction for Failed Nonoperative Reduction of Intussusception")
     st.caption(
         "กรอกข้อมูลผู้ป่วยด้านล่าง แล้วกด 'ทำนายผล' เพื่อประเมินโอกาสสำเร็จ/ล้มเหลว "
         "ของการลดกลืนของลำไส้แบบไม่ผ่าตัด (non-operative reduction)"
@@ -195,7 +260,7 @@ def main():
         render_result(inputs)
 
     with st.expander("เกี่ยวกับโมเดลนี้ (About this model)"):
-        st.write(f"**โมเดล:** XGBoost (oversampled ด้วย K-means SMOTE)")
+        st.write("**โมเดล:** XGBoost (oversampled ด้วย K-means SMOTE)")
         st.write(VALIDATION_NOTE)
 
 
