@@ -62,3 +62,14 @@ streamlit run app.py
 
 `logs/predictions.log` เก็บข้อมูลทางคลินิกของผู้ป่วยที่กรอกเข้ามา (ไม่มีชื่อ/HN แต่ยังเป็นข้อมูลสุขภาพ)
 ถ้า deploy แบบ public ควรจำกัดสิทธิ์การเข้าถึง log นี้ หรือปิดการเก็บ log ถ้าไม่จำเป็น
+
+## 📚 งานวิจัยที่เกี่ยวข้อง (References)
+
+โมเดลและแนวคิดในแอปนี้มาจากงานวิจัยต่อไปนี้ สำหรับผู้ที่สนใจอ่านรายละเอียดเพิ่มเติม:
+
+- Rinkaewngam, P., Chouvatut, V., & Khorana, J. *Machine Learning Model Aid Prediction for
+  Failed Nonoperative Reduction of Intussusception*.
+  [datascience.cmu.ac.th/storage/articles/44.pdf](https://datascience.cmu.ac.th/storage/articles/44.pdf)
+- พิทยาธร รินแก้วงาม. (2566). *การใช้ตัวแบบของเครื่องจักรเรียนรู้เพื่อทำนายความล้มเหลวในการรักษาภาวะลำไส้กลืนกัน
+  แบบไม่ผ่าตัด*. [ปริญญาโท, มหาวิทยาลัยเชียงใหม่]. บัณฑิตวิทยาลัย มหาวิทยาลัยเชียงใหม่, เชียงใหม่.
+  [cmudc.library.cmu.ac.th/frontend/Info/item/dc:174030](https://cmudc.library.cmu.ac.th/frontend/Info/item/dc:174030)
