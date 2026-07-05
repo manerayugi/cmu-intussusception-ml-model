@@ -1,3 +1,9 @@
 .DS_Store
 data
 __pycache__
+.venv_check
+.claude
+.venv
+output.json
+output.txt
+data_input.json
