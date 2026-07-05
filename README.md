@@ -56,7 +56,7 @@ streamlit run app.py
 
 **🐛 ถ้า deploy แล้ว error**:
 - `libgomp.so.1: cannot open shared object file` → เช็คว่า `packages.txt` (มี `libgomp1`) อยู่ที่ root ของ repo จริง แล้ว reboot app
-- ติดตั้ง dependency ไม่ผ่าน / เวอร์ชันชนกัน → Streamlit Cloud บางครั้งเมิน `runtime.txt` แล้วใช้ Python เวอร์ชันใหม่เกินไปจนไม่มี wheel ให้ไลบรารีที่ pin ไว้ — ลอง delete app แล้ว deploy ใหม่ พร้อมเลือก Python **3.11** เองใน "Advanced settings" ตอน deploy
+- ติดตั้ง dependency ไม่ผ่าน / เวอร์ชันชนกัน → Streamlit Cloud บางครั้งเมิน `runtime.txt` แล้วใช้ Python เวอร์ชันใหม่เกินไปจนไม่มี wheel ให้ไลบรารีที่ pin ไว้ — ลอง delete app แล้ว deploy ใหม่ พร้อมเลือก Python **3.12** เองใน "Advanced settings" ตอน deploy
 
 ## 🔒 หมายเหตุเรื่องข้อมูล
 
