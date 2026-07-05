@@ -11,6 +11,17 @@
 
 ## 🚀 วิธีติดตั้งและรัน (Setup & run)
 
+`requirements.txt` pin เวอร์ชันตรงกับที่ติดตั้งอยู่แล้วใน conda `base` env ของเครื่องนี้
+(Python 3.12) ดังนั้นรันตรงกับ env ส่วนตัวได้เลย ไม่ต้องสร้าง virtual env แยก:
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+ถ้าอยากแยก environment ต่างหาก (เช่น ใช้เครื่องอื่น หรือกลัวชนกับ package อื่นที่ติดตั้งไว้)
+ก็สร้าง venv ก่อนได้ตามปกติ:
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
