@@ -11,10 +11,12 @@
 
 ## 🚀 วิธีติดตั้งและรัน (Setup & run)
 
-`requirements.txt` pin เวอร์ชันตรงกับที่ติดตั้งอยู่แล้วใน conda `base` env ของเครื่องนี้
-(Python 3.12) ดังนั้นรันตรงกับ env ส่วนตัวได้เลย ไม่ต้องสร้าง virtual env แยก:
+`requirements.txt` pin เวอร์ชันตรงกับ conda env `personal` ของเครื่องนี้ (Python 3.14)
+ซึ่งตรงกับเวอร์ชันที่ Streamlit Community Cloud ใช้จริงด้วย ดังนั้นรันตรงกับ env ส่วนตัวได้เลย
+ไม่ต้องสร้าง virtual env แยก:
 
 ```bash
+conda activate personal
 pip install -r requirements.txt
 streamlit run app.py
 ```
@@ -67,7 +69,10 @@ streamlit run app.py
 
 **🐛 ถ้า deploy แล้ว error**:
 - `libgomp.so.1: cannot open shared object file` → เช็คว่า `packages.txt` (มี `libgomp1`) อยู่ที่ root ของ repo จริง แล้ว reboot app
-- ติดตั้ง dependency ไม่ผ่าน / เวอร์ชันชนกัน → Streamlit Cloud บางครั้งเมิน `runtime.txt` แล้วใช้ Python เวอร์ชันใหม่เกินไปจนไม่มี wheel ให้ไลบรารีที่ pin ไว้ — ลอง delete app แล้ว deploy ใหม่ พร้อมเลือก Python **3.12** เองใน "Advanced settings" ตอน deploy
+- ติดตั้ง dependency ไม่ผ่าน / เวอร์ชันชนกัน → เช็ค log ว่า Streamlit Cloud ใช้ Python เวอร์ชันไหนจริง (บรรทัด `Using Python ... environment at ...` — Cloud มักเมิน `runtime.txt` แล้วใช้เวอร์ชันล่าสุดของตัวเองแทน) ถ้าไม่ตรงกับที่ `requirements.txt` รองรับ ให้ไปตั้งค่า Python version ในหน้า **Settings ของแอป → Python version** (หรือลบแอปแล้ว deploy ใหม่ พร้อมเลือกเองใน "Advanced settings") ให้ตรงกับที่ log แสดงจริง แล้ว pin `requirements.txt`/`runtime.txt` ให้ตรงกับเวอร์ชันนั้น
+
+> ℹ️ ตอน `joblib.load()` โมเดลบน Python 3.14 อาจเห็น `DeprecationWarning: Setting the shape on a NumPy array...`
+> ใน log — เป็น warning จากภายใน joblib เอง (ยังไม่มีเวอร์ชันใหม่กว่าที่แก้) ไม่กระทบผลการทำนาย ปลอดภัยที่จะเพิกเฉย
 
 ## 🔒 หมายเหตุเรื่องข้อมูล
 
